@@ -1,15 +1,10 @@
 <script setup lang="ts">
-import { useWalletStore } from './stores/wallet';
-import Dashboard from './views/Dashboard.vue';
-import ConnectWallet from './components/ConnectWallet.vue';
-
-const wallet = useWalletStore();
+import Header from './components/Header.vue';
+import Tabs from './components/Tabs.vue';
 </script>
 
 <template>
-  <!-- Показываем экран подключения, если кошелёк не подключен -->
-  <ConnectWallet v-if="!wallet.isConnected" />
-  
-  <!-- После подключения — Dashboard -->
-  <Dashboard v-else />
+  <Header />
+  <Tabs />
+  <router-view />
 </template>

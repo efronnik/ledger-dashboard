@@ -1,48 +1,93 @@
-<script setup>
-import { ref } from 'vue';
+<script setup lang="ts">
+import { ref, computed, onMounted } from 'vue';
+import { useTransactionsStore } from '../stores/transactions';
+import Modal from './Modal.vue';
+import { formatDate } from '../utils/formatDate';
 
-const isLoading = ref(false);
-const isError = ref(true);
-const isEmpty = ref(false);
+// Store транзакций
+const transactionsStore = useTransactionsStore();
 
-const transactions = ref([]);
+// Поиск и фильтры
+const search = ref('');
+const filterStatus = ref('');
 
-setTimeout(() => {
-  isLoading.value = false;
-  isError.value = true; 
-  transactions.value = [
-    { id: '1', asset: 'ETH', amount: 0.5, date: '2025-08-25 12:34' },
-    { id: '2', asset: 'USDC', amount: 100, date: '2025-08-24 15:20' },
-  ];
+// Модальное окно
+const showModal = ref(false);
+const selectedTx = ref<any>(null);
 
-  isEmpty.value = transactions.value.length === 0;
-}, 2000);
+// Фильтрация транзакций по статусу и TxID
+const filteredTransactions = computed(() => {
+  return transactionsStore.transactions
+    .filter(tx => !filterStatus.value || tx.status === filterStatus.value)
+    .filter(tx => !search.value || tx.txID.toLowerCase().includes(search.value.toLowerCase()));
+});
+
+// Открытие модального окна
+const openModal = (tx: any) => {
+  selectedTx.value = tx;
+  showModal.value = true;
+};
+
+const closeModal = () => {
+  showModal.value = false;
+};
+
+// Получаем транзакции при монтировании
+onMounted(() => {
+  transactionsStore.fetchTransactions();
+});
 </script>
 
 <template>
-  <div class="bg-gray-900 p-4 rounded-2xl shadow-md">
-    <h2 class="text-xl font-bold text-white mb-2">Recent Transactions</h2>
+  <div class="p-4 mt-24">
+    <h2 class="text-xl font-bold mb-4">Recent Transactions</h2>
 
-    <p v-if="isLoading" class="text-gray-500">Loading...</p>
-    <p v-else-if="isError" class="text-red-500 font-semibold">Failed to load transactions</p>
-    <p v-else-if="isEmpty" class="text-gray-400">No transactions found</p>
+    <!-- Фильтры -->
+    <div class="flex gap-2 mb-4">
+      <input v-model="search" placeholder="Search by TxID" class="border px-2 py-1 rounded"/>
+      <select v-model="filterStatus" class="border px-2 py-1 rounded">
+        <option value="">All</option>
+        <option value="Validated">Validated</option>
+        <option value="Pending">Pending</option>
+        <option value="Invalid">Invalid</option>
+      </select>
+    </div>
 
-    <table v-else class="w-full text-left border-collapse">
+    <!-- Таблица -->
+    <table class="w-full border-collapse">
       <thead>
-        <tr class="border-b">
-          <th class="py-2">Asset</th>
-          <th class="py-2">Amount</th>
-          <th class="py-2">Date</th>
+        <tr class="bg-gray-200">
+          <th class="p-2 border">TxID</th>
+          <th class="p-2 border">Type</th>
+          <th class="p-2 border">Timestamp</th>
+          <th class="p-2 border">Status</th>
+          <th class="p-2 border">Block</th>
+          <th class="p-2 border">Chaincode</th>
         </tr>
       </thead>
       <tbody>
-        <tr v-for="tx in transactions" :key="tx.id" class="border-b">
-          <td class="py-2">{{ tx.asset }}</td>
-          <td class="py-2">{{ tx.amount }}</td>
-          <td class="py-2">{{ tx.date }}</td>
+        <tr v-for="tx in filteredTransactions" :key="tx.txID" class="hover:bg-gray-100">
+          <td class="p-2 border text-blue-600 cursor-pointer" @click="openModal(tx)">
+            {{ tx.txID.slice(0,6) + '...' + tx.txID.slice(-4) }}
+          </td>
+          <td class="p-2 border">{{ tx.type }}</td>
+          <td class="p-2 border">{{ formatDate(tx.timestamp) }}</td>
+          <td class="p-2 border">
+            <span :class="{
+              'text-green-600': tx.status === 'Validated',
+              'text-yellow-500': tx.status === 'Pending',
+              'text-red-600': tx.status === 'Invalid'
+            }">
+              {{ tx.status }}
+            </span>
+          </td>
+          <td class="p-2 border">{{ tx.block }}</td>
+          <td class="p-2 border">{{ tx.chaincode }}</td>
+        </tr>
+        <tr v-if="filteredTransactions.length === 0">
+          <td colspan="6" class="text-center p-4 text-gray-500">No transactions found</td>
         </tr>
       </tbody>
     </table>
-
   </div>
 </template>

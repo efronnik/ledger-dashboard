@@ -5,8 +5,9 @@ import Transactions from '../views/Transactions.vue'
 const router = createRouter({
   history: createWebHistory(),
   routes: [
-    { path: '/', component: Dashboard },
-    { path: '/transactions', component: Transactions }
+    { path: '/dashboard', component: Dashboard },
+    { path: '/send', component: Transactions },
+    { path: '/:pathMatch(.*)*', redirect: '/dashboard' } // редирект на dashboard по умолчанию
   ]
 })
 

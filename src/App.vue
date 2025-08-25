@@ -1,10 +1,15 @@
+<script setup lang="ts">
+import { useWalletStore } from './stores/wallet';
+import Dashboard from './views/Dashboard.vue';
+import ConnectWallet from './components/ConnectWallet.vue';
+
+const wallet = useWalletStore();
+</script>
+
 <template>
-  <div>
-    <a href="https://vite.dev" target="_blank">
-      <img src="/vite.svg" class="logo" alt="Vite logo" />
-    </a>
-    <a href="https://vuejs.org/" target="_blank">
-      <img src="./assets/vue.svg" class="logo vue" alt="Vue logo" />
-    </a>
-  </div>
+  <!-- Показываем экран подключения, если кошелёк не подключен -->
+  <ConnectWallet v-if="!wallet.isConnected" />
+  
+  <!-- После подключения — Dashboard -->
+  <Dashboard v-else />
 </template>

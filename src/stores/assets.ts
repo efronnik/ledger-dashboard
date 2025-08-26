@@ -10,7 +10,8 @@ export const useAssetsStore = defineStore("assets", () => {
 
   const wallet = useWalletStore();
 
-  const fetchAssets = async () => {
+  // Функция загрузки активов
+  const fetchAssets = async (forceRefresh = false) => {
     if (!wallet.account) {
       console.warn("Wallet not connected, cannot fetch assets");
       assets.value = [];
@@ -21,7 +22,8 @@ export const useAssetsStore = defineStore("assets", () => {
     error.value = false;
 
     try {
-      const data = await fetchTokens(wallet.account);
+      // Передаём forceRefresh = true для принудительной загрузки с сети
+      const data = await fetchTokens(wallet.account, forceRefresh);
       assets.value = data;
     } catch (err) {
       console.error("Failed to fetch assets:", err);
@@ -31,12 +33,14 @@ export const useAssetsStore = defineStore("assets", () => {
     }
   };
 
+  // Автоматическая загрузка при смене аккаунта
   watch(
     () => wallet.account,
-    (newAccount, oldAccount) => {
+    (newAccount) => {
       assets.value = [];
       if (newAccount) fetchAssets();
-    }
+    },
+    { immediate: true } // сразу подгружаем при инициализации store
   );
 
   return { assets, loading, error, fetchAssets };

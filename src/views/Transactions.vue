@@ -11,7 +11,7 @@ interface Transaction {
   type: string;
   timestamp: number;
   status: "Validated" | "Pending" | "Invalid";
-  block: number;  // <-- число
+  block: number;
   chaincode: string;
   creator: string;
   endorsements?: string[];
@@ -61,12 +61,6 @@ const loadTransactions = async () => {
   try {
     const txs: RpcTransaction[] = await fetchTransactions(wallet.account);
 
-    if (!txs || txs.length === 0) {
-      transactions.value = [];
-      isError.value = true; // покажем EmptyState
-      return;
-    }
-
     // Преобразуем к нашему типу Transaction
     transactions.value = txs.map((tx) => ({
       ...tx,
@@ -88,7 +82,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="bg-white rounded-xl shadow p-4 mt-6 w-full">
+  <div class="bg-white rounded-xl shadow p-4 mt-28 w-full flex flex-col">
     <!-- Заголовок -->
     <h2 class="text-xl font-bold mb-4">Recent Transactions</h2>
 
@@ -123,50 +117,52 @@ onMounted(() => {
       message="No transactions found"
     />
 
-    <!-- Таблица -->
-    <table v-else class="w-full border-collapse">
-      <thead>
-        <tr class="bg-gray-50">
-          <th class="p-2 border">TxID</th>
-          <th class="p-2 border">Type</th>
-          <th class="p-2 border">Timestamp</th>
-          <th class="p-2 border">Status</th>
-          <th class="p-2 border">Block</th>
-          <th class="p-2 border">Chaincode</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr
-          v-for="tx in paginatedTransactions"
-          :key="tx.txID"
-          class="border-t hover:bg-gray-50 cursor-pointer"
-          @click="openModal(tx)"
-        >
-          <td class="p-2 text-blue-600">
-            {{ tx.txID.slice(0,6) + '...' + tx.txID.slice(-4) }}
-          </td>
-          <td class="p-2">{{ tx.type }}</td>
-          <td class="p-2">{{ formatDate(tx.timestamp) }}</td>
-          <td class="p-2">
-            <span
-              class="px-2 py-1 rounded text-xs"
-              :class="{
-                'bg-green-100 text-green-800': tx.status === 'Validated',
-                'bg-yellow-100 text-yellow-800': tx.status === 'Pending',
-                'bg-red-100 text-red-800': tx.status === 'Invalid'
-              }"
-            >
-              {{ tx.status }}
-            </span>
-          </td>
-          <td class="p-2">{{ tx.block }}</td>
-          <td class="p-2 text-green-700">{{ tx.chaincode }}</td>
-        </tr>
-        <tr v-if="filteredTransactions.length === 0">
-          <td colspan="6" class="text-center p-4 text-gray-500">No transactions found</td>
-        </tr>
-      </tbody>
-    </table>
+    <!-- Таблица с горизонтальным скроллом -->
+    <div v-else class="overflow-x-auto max-h-[500px]">
+      <table class="w-full border-collapse min-w-[700px]">
+        <thead>
+          <tr class="bg-gray-50">
+            <th class="p-2 border">TxID</th>
+            <th class="p-2 border">Type</th>
+            <th class="p-2 border">Timestamp</th>
+            <th class="p-2 border">Status</th>
+            <th class="p-2 border">Block</th>
+            <th class="p-2 border">Chaincode</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            v-for="tx in paginatedTransactions"
+            :key="tx.txID"
+            class="border-t hover:bg-gray-50 cursor-pointer"
+            @click="openModal(tx)"
+          >
+            <td class="p-2 text-blue-600">
+              {{ tx.txID.slice(0,6) + '...' + tx.txID.slice(-4) }}
+            </td>
+            <td class="p-2">{{ tx.type }}</td>
+            <td class="p-2">{{ formatDate(tx.timestamp) }}</td>
+            <td class="p-2">
+              <span
+                class="px-2 py-1 rounded text-xs"
+                :class="{
+                  'bg-green-100 text-green-800': tx.status === 'Validated',
+                  'bg-yellow-100 text-yellow-800': tx.status === 'Pending',
+                  'bg-red-100 text-red-800': tx.status === 'Invalid'
+                }"
+              >
+                {{ tx.status }}
+              </span>
+            </td>
+            <td class="p-2">{{ tx.block }}</td>
+            <td class="p-2 text-green-700">{{ tx.chaincode }}</td>
+          </tr>
+          <tr v-if="filteredTransactions.length === 0">
+            <td colspan="6" class="text-center p-4 text-gray-500">No transactions found</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
 
     <!-- Пагинация -->
     <div class="flex justify-end gap-2 mt-4" v-if="filteredTransactions.length > itemsPerPage">

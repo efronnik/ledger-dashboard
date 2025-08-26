@@ -10,6 +10,19 @@ export interface TokenBalance {
   change24h: number;
 }
 
+// --- LocalStorage кэш по адресу ---
+let cachedTokensByAddress: Record<string, TokenBalance[]> = {};
+
+const savedTokens = localStorage.getItem("cachedTokensByAddress");
+if (savedTokens) {
+  try {
+    cachedTokensByAddress = JSON.parse(savedTokens);
+  } catch (err) {
+    console.warn("Failed to parse cached tokens from localStorage", err);
+    cachedTokensByAddress = {};
+  }
+}
+
 // Получаем цены токенов через CoinGecko
 async function fetchTokenPrices(tokens: string[]): Promise<Record<string, { usd: number; usd_24h_change: number }>> {
   try {
@@ -31,9 +44,14 @@ async function fetchTokenPrices(tokens: string[]): Promise<Record<string, { usd:
 }
 
 // Основная функция получения балансов
-export async function fetchTokens(address: string): Promise<TokenBalance[]> {
+export async function fetchTokens(address: string, forceRefresh = false): Promise<TokenBalance[]> {
   if (!INFURA_PROJECT_ID)
     throw new Error("INFURA_PROJECT_ID is not defined in .env");
+
+  // Возвращаем кэш если есть и нет принудительного обновления
+  if (!forceRefresh && cachedTokensByAddress[address]) {
+    return cachedTokensByAddress[address];
+  }
 
   const url = `https://sepolia.infura.io/v3/${INFURA_PROJECT_ID}`;
   let ethBalance = 0;
@@ -74,6 +92,10 @@ export async function fetchTokens(address: string): Promise<TokenBalance[]> {
       change24h: prices["btc"]?.usd_24h_change || 0
     },
   ];
+
+  // Сохраняем в кэш и localStorage
+  cachedTokensByAddress[address] = tokens;
+  localStorage.setItem("cachedTokensByAddress", JSON.stringify(cachedTokensByAddress));
 
   return tokens;
 }

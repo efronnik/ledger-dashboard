@@ -1,12 +1,37 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, onMounted, watch } from "vue";
 import { useWalletStore } from "../stores/wallet";
-import EmptyState from "../components/EmptyState.vue";
+import EmptyState from "./EmptyState.vue";
 
 const wallet = useWalletStore();
 const isLoading = ref(false);
 const isError = ref(false);
 const balance = ref<number | null>(null);
+const displayedBalance = ref<number | null>(null);
+
+// Анимация изменения баланса
+const animateBalance = (newValue: number) => {
+  if (displayedBalance.value === null) {
+    displayedBalance.value = newValue;
+    return;
+  }
+  const start = displayedBalance.value;
+  const end = newValue;
+  const duration = 500; // миллисекунды
+  const stepTime = 20;
+  const steps = duration / stepTime;
+  let currentStep = 0;
+
+  const timer = setInterval(() => {
+    currentStep++;
+    displayedBalance.value = parseFloat((start + ((end - start) * currentStep) / steps).toFixed(4));
+    if (currentStep >= steps) clearInterval(timer);
+  }, stepTime);
+};
+
+watch(balance, (newVal) => {
+  if (newVal !== null) animateBalance(newVal);
+});
 
 const loadBalance = async () => {
   if (!wallet.isConnected || !wallet.account) return;
@@ -43,7 +68,7 @@ onMounted(loadBalance);
     <button
       @click="loadBalance"
       :disabled="isLoading || !wallet.isConnected"
-      class="absolute top-2 right-2 w-8 h-8 flex items-center justify-center rounded border border-gray-300 bg-gray-100 text-gray-700 hover:bg-gray-200 hover:border-blue-500 transition-all"
+      class="absolute top-2 sm:top-3 right-2 sm:right-3 w-8 h-8 flex items-center justify-center rounded border border-gray-300 bg-gray-100 text-gray-700 hover:bg-gray-200 hover:border-blue-500 transition-all"
       title="Refresh"
     >
       🔄
@@ -60,9 +85,10 @@ onMounted(loadBalance);
     <div v-else-if="isError" class="text-red-500 font-semibold text-xl">
       Network error, please try again
     </div>
-    <EmptyState v-else-if="balance === null" message="No data found" />
-    <div v-else class="text-2xl font-bold text-gray-700 mb-1">
-      {{ balance }} ETH
+    <EmptyState v-else-if="displayedBalance === null" message="No data found" />
+    <div v-else class="text-2xl font-bold text-gray-700 mb-1 flex items-baseline gap-1">
+      {{ displayedBalance }}
+      <span class="text-xs text-gray-500">ETH</span>
     </div>
   </div>
 </template>

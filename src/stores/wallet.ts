@@ -1,13 +1,11 @@
-// stores/wallet.ts
 import { defineStore } from "pinia";
 import { ref } from "vue";
 
 export const useWalletStore = defineStore("wallet", () => {
-  const account = ref<string | null>(null);
-  const isConnected = ref(false);
+  const account = ref<string | null>(localStorage.getItem("walletAccount"));
+  const isConnected = ref(!!account.value);
   const networkCorrect = ref(true);
 
-  // Проверка сети
   const checkNetwork = async () => {
     if (!window.ethereum) return;
     const chainId = await window.ethereum.request({ method: "eth_chainId" });
@@ -18,7 +16,6 @@ export const useWalletStore = defineStore("wallet", () => {
       alert("Incorrect network! Please connect to Sepolia.");
   };
 
-  // Подключение кошелька
   const connectWallet = async () => {
     if (!window.ethereum) {
       alert("MetaMask is not installed!");
@@ -30,24 +27,30 @@ export const useWalletStore = defineStore("wallet", () => {
       });
       account.value = accounts[0];
       isConnected.value = true;
+      if (account.value) {
+        localStorage.setItem("walletAccount", account.value);
+      }
       await checkNetwork();
     } catch (err) {
       console.error(err);
     }
   };
 
-  // Отключение кошелька
   const disconnectWallet = () => {
     account.value = null;
     isConnected.value = false;
     networkCorrect.value = true;
+    localStorage.removeItem("walletAccount");
   };
 
-  // События MetaMask
   if (window.ethereum) {
     window.ethereum.on("accountsChanged", (accounts: string[]) => {
-      if (accounts.length > 0) account.value = accounts[0];
-      else disconnectWallet();
+      if (accounts.length > 0) {
+        account.value = accounts[0];
+        if (account.value) {
+          localStorage.setItem("walletAccount", account.value);
+        }
+      } else disconnectWallet();
     });
     window.ethereum.on("chainChanged", () => checkNetwork());
   }
@@ -58,6 +61,6 @@ export const useWalletStore = defineStore("wallet", () => {
     networkCorrect,
     connectWallet,
     disconnectWallet,
-    checkNetwork, // <-- добавлено!
+    checkNetwork,
   };
 });

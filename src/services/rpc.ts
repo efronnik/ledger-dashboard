@@ -5,29 +5,45 @@ if (!INFURA_PROJECT_ID) throw new Error("VITE_INFURA_PROJECT_ID is not defined i
 
 const INFURA_URL = `https://sepolia.infura.io/v3/${INFURA_PROJECT_ID}`;
 
-let cachedTxs: Transaction[] = [];
-let lastFetchTime = 0;
-
 export interface Transaction {
   txID: string;
   type: "Transfer" | "Contract";
   timestamp: number;
   status: "Validated" | "Pending" | "Invalid";
-  block: number; // оставляем number
+  block: number;
   chaincode: string;
   creator: string;
   endorsements: string[];
+}
+
+// Кэш транзакций по адресу
+let cachedTxsByAddress: Record<string, Transaction[]> = {};
+let lastFetchByAddress: Record<string, number> = {};
+
+// Загружаем из localStorage при старте
+const saved = localStorage.getItem("cachedTxsByAddress");
+if (saved) {
+  try {
+    cachedTxsByAddress = JSON.parse(saved);
+  } catch (err) {
+    console.warn("Failed to parse cached transactions from localStorage", err);
+    cachedTxsByAddress = {};
+  }
 }
 
 export async function fetchTransactions(address: string): Promise<Transaction[]> {
   if (!address) throw new Error("Address is required");
 
   const now = Date.now();
-  if (now - lastFetchTime < 15000 && cachedTxs.length > 0) {
+  const cachedTxs = cachedTxsByAddress[address] ?? [];
+  const lastFetch = lastFetchByAddress[address] ?? 0;
+
+  if (now - lastFetch < 15000 && cachedTxs.length > 0) {
     return cachedTxs;
   }
 
   try {
+    // Получаем последний блок
     const latestBlockResp = await axios.post(INFURA_URL, {
       jsonrpc: "2.0",
       method: "eth_blockNumber",
@@ -36,19 +52,25 @@ export async function fetchTransactions(address: string): Promise<Transaction[]>
     });
     const latestBlock = parseInt(latestBlockResp.data.result, 16);
 
-    const txs: Transaction[] = [];
     const blocksToCheck = 3;
-
+    const blockPromises = [];
     for (let i = latestBlock; i > latestBlock - blocksToCheck; i--) {
       const blockHex = "0x" + i.toString(16);
-      const blockResp = await axios.post(INFURA_URL, {
-        jsonrpc: "2.0",
-        method: "eth_getBlockByNumber",
-        params: [blockHex, true],
-        id: 1,
-      });
+      blockPromises.push(
+        axios.post(INFURA_URL, {
+          jsonrpc: "2.0",
+          method: "eth_getBlockByNumber",
+          params: [blockHex, true],
+          id: 1,
+        })
+      );
+    }
 
-      const block = blockResp.data.result;
+    const blockResponses = await Promise.all(blockPromises);
+    const txs: Transaction[] = [];
+
+    for (const resp of blockResponses) {
+      const block = resp.data.result;
       if (!block || !block.transactions) continue;
 
       for (const tx of block.transactions) {
@@ -70,11 +92,24 @@ export async function fetchTransactions(address: string): Promise<Transaction[]>
       }
     }
 
-    cachedTxs = txs;
-    lastFetchTime = now;
-    return txs;
+    // Объединяем с предыдущими, удаляем дубликаты
+    const allTxsMap: Record<string, Transaction> = {};
+    [...txs, ...cachedTxs].forEach(tx => {
+      allTxsMap[tx.txID] = tx;
+    });
+
+    const allTxs = Object.values(allTxsMap).sort((a, b) => b.timestamp - a.timestamp);
+
+    cachedTxsByAddress[address] = allTxs;
+    lastFetchByAddress[address] = now;
+
+    // Сохраняем в localStorage
+    localStorage.setItem("cachedTxsByAddress", JSON.stringify(cachedTxsByAddress));
+
+    return allTxs;
   } catch (err) {
     console.error("Error fetching transactions", err);
-    throw new Error("Network error, please try again");
+    // Возвращаем кэш даже при ошибке сети
+    return cachedTxs;
   }
 }

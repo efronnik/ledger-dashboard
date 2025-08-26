@@ -3,7 +3,7 @@ import { ref, computed, onMounted } from 'vue';
 import { useTransactionsStore } from '../stores/transactions';
 import { useWalletStore } from '../stores/wallet';
 import Modal from './Modal.vue';
-import { formatDate } from '../utils/formatDate';
+import EmptyState from './EmptyState.vue';
 import type { Transaction } from '../services/rpc';
 
 // Stores
@@ -16,7 +16,7 @@ const filterStatus = ref('');
 
 // Пагинация
 const currentPage = ref(1);
-const itemsPerPage = 10;
+const itemsPerPage = 6; // Показываем 6 транзакций на странице
 
 // Модальное окно
 const showModal = ref(false);
@@ -85,7 +85,6 @@ onMounted(() => {
         <tr>
           <th class="p-2 border">Transaction ID</th>
           <th class="p-2 border">Type</th>
-          <th class="p-2 border">Timestamp</th>
           <th class="p-2 border">Status</th>
           <th class="p-2 border">Block</th>
           <th class="p-2 border">Chaincode</th>
@@ -102,7 +101,6 @@ onMounted(() => {
             {{ tx.txID.slice(0,6) + '...' + tx.txID.slice(-4) }}
           </td>
           <td class="p-2">{{ tx.type }}</td>
-          <td class="p-2">{{ formatDate(tx.timestamp) }}</td>
           <td class="p-2">
             <span
               class="px-2 py-1 rounded text-xs"
@@ -118,29 +116,29 @@ onMounted(() => {
           <td class="p-2">{{ tx.block }}</td>
           <td class="p-2 text-green-700">{{ tx.chaincode }}</td>
         </tr>
-        <tr v-if="filteredTransactions.length === 0">
-          <td colspan="6" class="text-center p-4 text-gray-500">No transactions found</td>
-        </tr>
       </tbody>
     </table>
 
+    <!-- EmptyState если транзакций нет -->
+    <EmptyState v-if="filteredTransactions.length === 0" message="No transactions found" />
+
     <!-- Пагинация -->
     <div class="flex justify-end mt-2 space-x-2">
-  <button
-    class="px-3 py-2 border border-gray-300 rounded bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-50"
-    :disabled="currentPage === 1"
-    @click="currentPage--"
-  >
-    Previous
-  </button>
-  <button
-    class="px-3 py-2 border border-gray-300 rounded bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-50"
-    :disabled="currentPage === Math.ceil(filteredTransactions.length / itemsPerPage)"
-    @click="currentPage++"
-  >
-    Next
-  </button>
-</div>
+      <button
+        class="px-3 py-2 border border-gray-300 rounded bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-50"
+        :disabled="currentPage === 1"
+        @click="currentPage--"
+      >
+        Previous
+      </button>
+      <button
+        class="px-3 py-2 border border-gray-300 rounded bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-50"
+        :disabled="currentPage === Math.ceil(filteredTransactions.length / itemsPerPage) || filteredTransactions.length === 0"
+        @click="currentPage++"
+      >
+        Next
+      </button>
+    </div>
 
     <!-- Модалка -->
     <Modal v-if="showModal" @close="showModal = false">

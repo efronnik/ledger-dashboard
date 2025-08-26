@@ -1,14 +1,21 @@
 <script setup lang="ts">
-import { useRoute, useRouter } from 'vue-router';
+import { useRoute, useRouter } from "vue-router";
+
 const route = useRoute();
 const router = useRouter();
 
-const tabs = [
-  { name: 'Dashboard', path: '/dashboard' },
-  { name: 'Send Transaction', path: '/send' }
+interface Tab {
+  name: string;
+  path: string;
+}
+
+const tabs: Tab[] = [
+  { name: "Dashboard", path: "/dashboard" },
+  { name: "Send Transaction", path: "/send" },
 ];
 
-const isActive = (path: string) => route.path === path;
+// Активная вкладка учитывает вложенные маршруты
+const isActive = (path: string) => route.path.startsWith(path);
 </script>
 
 <template>
@@ -19,7 +26,7 @@ const isActive = (path: string) => route.path === path;
       @click="router.push(tab.path)"
       :class="[
         'px-4 py-2 rounded hover:bg-gray-300',
-        isActive(tab.path) ? 'bg-blue-500 text-white' : 'bg-gray-200'
+        isActive(tab.path) ? 'bg-blue-500 text-white' : 'bg-gray-200',
       ]"
     >
       {{ tab.name }}

@@ -1,37 +1,56 @@
-<script setup>
-import { ref } from 'vue';
+<script setup lang="ts">
+import { ref } from "vue";
+import { useWalletStore } from "../stores/wallet";
+import EmptyState from "../components/EmptyState.vue";
 
-const isLoading = ref(true);
+const wallet = useWalletStore();
+
+const isLoading = ref(false);
 const isError = ref(false);
-const isEmpty = ref(false);
+const balance = ref<number | null>(null);
 
-const balance = ref(0);
-const usdValue = ref(0);
+const loadBalance = async () => {
+  if (!wallet.isConnected || !wallet.account) return;
 
-setTimeout(() => {
-  isLoading.value = false;
-  isError.value = true;
-  balance.value = 1.25;
-  usdValue.value = 2300;
-  isEmpty.value = balance.value === 0;
-}, 2000);
+  isLoading.value = true;
+  isError.value = false;
+
+  try {
+    // Здесь пример получения баланса через window.ethereum
+    const raw = await window.ethereum.request({
+      method: "eth_getBalance",
+      params: [wallet.account, "latest"],
+    });
+    balance.value = parseFloat((parseInt(raw, 16) / 1e18).toFixed(4));
+  } catch (err) {
+    console.error("Failed to fetch balance", err);
+    isError.value = true;
+  } finally {
+    isLoading.value = false;
+  }
+};
 </script>
 
 <template>
-  <div class="p-4 border rounded-lg shadow bg-white">
+  <div class="p-4 border rounded-lg shadow bg-white w-full max-w-sm">
     <h2 class="text-lg font-bold mb-2">Wallet Balance</h2>
 
     <p v-if="isLoading" class="text-gray-500">Loading...</p>
-    <p v-else-if="isError" class="text-red-500 font-semibold">Failed to load balance</p>
-    <p v-else-if="isEmpty" class="text-gray-400">No funds in wallet</p>
+    <p v-if="isError" class="text-red-500 font-semibold">
+      Network error, please try again
+    </p>
+    <EmptyState v-else-if="balance === null" message="No data found" />
 
     <div v-else>
-        <p class="text-2xl font-semibold text-gray-700">
-      {{ balance }} ETH
-        </p>
-    <p class="text-sm text-gray-500">≈ ${{ usdValue }}</p>
+      <p class="text-2xl font-semibold text-gray-700">{{ balance }} ETH</p>
     </div>
 
-    
+    <button
+      class="mt-3 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+      @click="loadBalance"
+      :disabled="isLoading || !wallet.isConnected"
+    >
+      Refresh
+    </button>
   </div>
 </template>

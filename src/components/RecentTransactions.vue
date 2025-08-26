@@ -1,40 +1,56 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { useTransactionsStore } from '../stores/transactions';
+import { useWalletStore } from '../stores/wallet';
 import Modal from './Modal.vue';
 import { formatDate } from '../utils/formatDate';
+import type { Transaction } from '../services/rpc';
 
-// Store транзакций
+// Stores
 const transactionsStore = useTransactionsStore();
+const wallet = useWalletStore();
 
 // Поиск и фильтры
 const search = ref('');
 const filterStatus = ref('');
 
+// Пагинация
+const currentPage = ref(1);
+const itemsPerPage = 10;
+
 // Модальное окно
 const showModal = ref(false);
-const selectedTx = ref<any>(null);
+const selectedTx = ref<Transaction | null>(null);
 
 // Фильтрация транзакций по статусу и TxID
-const filteredTransactions = computed(() => {
+const filteredTransactions = computed<Transaction[]>(() => {
   return transactionsStore.transactions
     .filter(tx => !filterStatus.value || tx.status === filterStatus.value)
     .filter(tx => !search.value || tx.txID.toLowerCase().includes(search.value.toLowerCase()));
 });
 
+// Транзакции для текущей страницы
+const paginatedTransactions = computed<Transaction[]>(() => {
+  const start = (currentPage.value - 1) * itemsPerPage;
+  const end = start + itemsPerPage;
+  return filteredTransactions.value.slice(start, end);
+});
+
 // Открытие модального окна
-const openModal = (tx: any) => {
+const openModal = (tx: Transaction) => {
   selectedTx.value = tx;
   showModal.value = true;
 };
 
-const closeModal = () => {
-  showModal.value = false;
+// Загрузка транзакций при монтировании
+const loadTransactions = async () => {
+  if (!wallet.account) return;
+  await transactionsStore.fetchTransactions(wallet.account);
+  currentPage.value = 1; // сброс пагинации при обновлении
 };
 
-// Получаем транзакции при монтировании
 onMounted(() => {
-  transactionsStore.fetchTransactions();
+  loadTransactions();
 });
 </script>
 
@@ -53,6 +69,15 @@ onMounted(() => {
       </select>
     </div>
 
+    <!-- Кнопка Refresh -->
+    <button
+      class="mb-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+      @click="loadTransactions"
+      :disabled="!wallet.account"
+    >
+      Refresh
+    </button>
+
     <!-- Таблица -->
     <table class="w-full border-collapse">
       <thead>
@@ -66,7 +91,7 @@ onMounted(() => {
         </tr>
       </thead>
       <tbody>
-        <tr v-for="tx in filteredTransactions" :key="tx.txID" class="hover:bg-gray-100">
+        <tr v-for="tx in paginatedTransactions" :key="tx.txID" class="hover:bg-gray-100">
           <td class="p-2 border text-blue-600 cursor-pointer" @click="openModal(tx)">
             {{ tx.txID.slice(0,6) + '...' + tx.txID.slice(-4) }}
           </td>
@@ -89,5 +114,38 @@ onMounted(() => {
         </tr>
       </tbody>
     </table>
+
+    <!-- Пагинация -->
+    <div class="flex justify-end gap-2 mt-4">
+      <button
+        class="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
+        :disabled="currentPage === 1"
+        @click="currentPage--"
+      >
+        Prev
+      </button>
+
+      <span>
+        Page {{ currentPage }} of {{ Math.ceil(filteredTransactions.length / itemsPerPage) }}
+      </span>
+
+      <button
+        class="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
+        :disabled="currentPage === Math.ceil(filteredTransactions.length / itemsPerPage)"
+        @click="currentPage++"
+      >
+        Next
+      </button>
+    </div>
+
+    <!-- Модалка -->
+    <Modal v-if="showModal" @close="showModal = false">
+      <div>
+        <h3 class="text-lg font-bold mb-2">Transaction Details</h3>
+        <p><strong>TxID:</strong> {{ selectedTx?.txID }}</p>
+        <p><strong>Creator:</strong> {{ selectedTx?.creator }}</p>
+        <p><strong>Endorsements:</strong> {{ selectedTx?.endorsements?.join(', ') || 'None' }}</p>
+      </div>
+    </Modal>
   </div>
 </template>

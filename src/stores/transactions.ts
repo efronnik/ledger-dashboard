@@ -1,16 +1,17 @@
-import { defineStore } from 'pinia';
-import { ref } from 'vue';
-import { fetchTransactions } from '../services/rpc';
+import { defineStore } from "pinia";
+import { ref } from "vue";
+import { fetchTransactions, Transaction } from "../services/rpc";
 
-export const useTransactionsStore = defineStore('transactions', () => {
-  const transactions = ref<any[]>([]);
+export const useTransactionsStore = defineStore("transactions", () => {
+  const transactions = ref<Transaction[]>([]);
 
-  const fetchTransactionsStore = async () => {
+  const fetchTransactionsStore = async (address: string) => {
     try {
-      const data: any = await fetchTransactions();
+      const data: Transaction[] = await fetchTransactions(address);
       transactions.value = data;
     } catch (err) {
-      console.error('Error fetching transactions', err);
+      console.error("Error fetching transactions", err);
+      transactions.value = []; // на случай ошибки, очищаем массив
     }
   };
 

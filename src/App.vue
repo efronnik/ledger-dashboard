@@ -17,10 +17,12 @@ const isConnected = computed(() => wallet.isConnected);
     <ConnectWallet v-if="!isConnected" key="connect" />
 
     <!-- Основной интерфейс -->
-    <div v-else key="main">
+    <div v-else key="main" class="min-h-screen bg-gray-50 font-sans text-gray-900">
       <Header />
       <Tabs />
-      <router-view />
+      <div class="p-6">
+        <router-view />
+      </div>
     </div>
   </transition>
 </template>

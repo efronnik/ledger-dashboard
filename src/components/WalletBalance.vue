@@ -4,7 +4,6 @@ import { useWalletStore } from "../stores/wallet";
 import EmptyState from "../components/EmptyState.vue";
 
 const wallet = useWalletStore();
-
 const isLoading = ref(false);
 const isError = ref(false);
 const balance = ref<number | null>(null);
@@ -12,11 +11,17 @@ const balance = ref<number | null>(null);
 const loadBalance = async () => {
   if (!wallet.isConnected || !wallet.account) return;
 
+  // Проверка наличия MetaMask
+  if (!window.ethereum) {
+    console.error("MetaMask is not installed");
+    isError.value = true;
+    return;
+  }
+
   isLoading.value = true;
   isError.value = false;
 
   try {
-    // Здесь пример получения баланса через window.ethereum
     const raw = await window.ethereum.request({
       method: "eth_getBalance",
       params: [wallet.account, "latest"],
@@ -32,21 +37,18 @@ const loadBalance = async () => {
 </script>
 
 <template>
-  <div class="p-4 border rounded-lg shadow bg-white w-full max-w-sm">
-    <h2 class="text-lg font-bold mb-2">Wallet Balance</h2>
+  <div class="bg-white rounded-xl shadow p-4 mt-6 w-80">
+    <h2 class="font-semibold text-sm mb-2">Wallet Balance</h2>
 
-    <p v-if="isLoading" class="text-gray-500">Loading...</p>
-    <p v-if="isError" class="text-red-500 font-semibold">
+    <div v-if="isLoading" class="text-gray-500 text-xl font-semibold">Loading...</div>
+    <div v-else-if="isError" class="text-red-500 font-semibold text-xl">
       Network error, please try again
-    </p>
-    <EmptyState v-else-if="balance === null" message="No data found" />
-
-    <div v-else>
-      <p class="text-2xl font-semibold text-gray-700">{{ balance }} ETH</p>
     </div>
+    <EmptyState v-else-if="balance === null" message="No data found" />
+    <div v-else class="text-2xl font-bold text-gray-700">{{ balance }} ETH</div>
 
     <button
-      class="mt-3 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+      class="mt-3 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 text-sm"
       @click="loadBalance"
       :disabled="isLoading || !wallet.isConnected"
     >

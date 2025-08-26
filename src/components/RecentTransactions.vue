@@ -55,26 +55,28 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="bg-white rounded shadow p-4 mt-24">
-    <!-- Заголовок и фильтры -->
-    <div class="flex justify-between items-center mb-4">
-      <h2 class="font-semibold text-lg">Recent Transactions</h2>
-      <div class="flex space-x-2">
-        <input v-model="search" type="text" placeholder="Search by TxID" class="border rounded px-2 py-1"/>
-        <select v-model="filterStatus" class="border rounded px-2 py-1">
-          <option value="">All</option>
-          <option value="Validated">Validated</option>
-          <option value="Pending">Pending</option>
-          <option value="Invalid">Invalid</option>
-        </select>
-        <button
-          class="px-2 py-1 border rounded bg-gray-100 hover:bg-gray-200"
-          @click="loadTransactions"
-          :disabled="!wallet.account"
-        >
-          Refresh
-        </button>
-      </div>
+  <div class="bg-white rounded-xl shadow p-4 mt-24 w-full">
+    <!-- Заголовок -->
+    <h2 class="font-semibold text-lg mb-4">Recent Transactions</h2>
+
+    <!-- Фильтры -->
+    <div class="flex flex-wrap items-center gap-2 mb-4">
+      <select
+        v-model="filterStatus"
+        class="border border-gray-300 rounded px-3 py-2 bg-white text-gray-700"
+      >
+        <option value="">All Status</option>
+        <option value="Validated">Validated</option>
+        <option value="Pending">Pending</option>
+        <option value="Invalid">Invalid</option>
+      </select>
+
+      <input
+        v-model="search"
+        type="text"
+        placeholder="Search by Transaction ID"
+        class="border border-gray-300 rounded px-2 py-2 bg-white text-gray-700 w-60 min-w-[150px]"
+      />
     </div>
 
     <!-- Таблица -->
@@ -123,22 +125,22 @@ onMounted(() => {
     </table>
 
     <!-- Пагинация -->
-    <div class="flex justify-end mt-2 space-x-2 text-sm text-gray-600">
-      <button
-        class="px-2 py-1 border rounded disabled:opacity-50"
-        :disabled="currentPage === 1"
-        @click="currentPage--"
-      >
-        Previous
-      </button>
-      <button
-        class="px-2 py-1 border rounded disabled:opacity-50"
-        :disabled="currentPage === Math.ceil(filteredTransactions.length / itemsPerPage)"
-        @click="currentPage++"
-      >
-        Next
-      </button>
-    </div>
+    <div class="flex justify-end mt-2 space-x-2">
+  <button
+    class="px-3 py-2 border border-gray-300 rounded bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-50"
+    :disabled="currentPage === 1"
+    @click="currentPage--"
+  >
+    Previous
+  </button>
+  <button
+    class="px-3 py-2 border border-gray-300 rounded bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-50"
+    :disabled="currentPage === Math.ceil(filteredTransactions.length / itemsPerPage)"
+    @click="currentPage++"
+  >
+    Next
+  </button>
+</div>
 
     <!-- Модалка -->
     <Modal v-if="showModal" @close="showModal = false">

@@ -88,16 +88,21 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="p-4 mt-24">
+  <div class="bg-white rounded-xl shadow p-4 mt-6 w-full">
+    <!-- Заголовок -->
     <h2 class="text-xl font-bold mb-4">Recent Transactions</h2>
 
-    <div class="flex gap-2 mb-4">
+    <!-- Фильтры -->
+    <div class="flex flex-wrap items-center gap-2 mb-4">
       <input
         v-model="search"
         placeholder="Search by TxID"
-        class="border px-2 py-1 rounded"
+        class="border border-gray-300 rounded px-3 py-2 bg-white text-gray-700 w-60 min-w-[150px]"
       />
-      <select v-model="filterStatus" class="border px-2 py-1 rounded">
+      <select
+        v-model="filterStatus"
+        class="border border-gray-300 rounded px-3 py-2 bg-white text-gray-700"
+      >
         <option value="">All</option>
         <option value="Validated">Validated</option>
         <option value="Pending">Pending</option>
@@ -105,22 +110,23 @@ onMounted(() => {
       </select>
       <button
         @click="loadTransactions"
-        class="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
+        class="px-3 py-2 border border-gray-300 rounded bg-gray-100 text-gray-700 hover:bg-gray-200"
       >
         Refresh
       </button>
     </div>
 
+    <!-- Загрузка / EmptyState -->
     <div v-if="isLoading" class="text-gray-500">Loading...</div>
-
     <EmptyState
       v-else-if="isError || filteredTransactions.length === 0"
       message="No transactions found"
     />
 
+    <!-- Таблица -->
     <table v-else class="w-full border-collapse">
       <thead>
-        <tr class="bg-gray-200">
+        <tr class="bg-gray-50">
           <th class="p-2 border">TxID</th>
           <th class="p-2 border">Type</th>
           <th class="p-2 border">Timestamp</th>
@@ -133,29 +139,31 @@ onMounted(() => {
         <tr
           v-for="tx in paginatedTransactions"
           :key="tx.txID"
-          class="hover:bg-gray-100"
+          class="border-t hover:bg-gray-50 cursor-pointer"
+          @click="openModal(tx)"
         >
-          <td
-            class="p-2 border text-blue-600 cursor-pointer"
-            @click="openModal(tx)"
-          >
-            {{ tx.txID.slice(0, 6) + "..." + tx.txID.slice(-4) }}
+          <td class="p-2 text-blue-600">
+            {{ tx.txID.slice(0,6) + '...' + tx.txID.slice(-4) }}
           </td>
-          <td class="p-2 border">{{ tx.type }}</td>
-          <td class="p-2 border">{{ formatDate(tx.timestamp) }}</td>
-          <td class="p-2 border">
+          <td class="p-2">{{ tx.type }}</td>
+          <td class="p-2">{{ formatDate(tx.timestamp) }}</td>
+          <td class="p-2">
             <span
+              class="px-2 py-1 rounded text-xs"
               :class="{
-                'text-green-600': tx.status === 'Validated',
-                'text-yellow-500': tx.status === 'Pending',
-                'text-red-600': tx.status === 'Invalid',
+                'bg-green-100 text-green-800': tx.status === 'Validated',
+                'bg-yellow-100 text-yellow-800': tx.status === 'Pending',
+                'bg-red-100 text-red-800': tx.status === 'Invalid'
               }"
             >
               {{ tx.status }}
             </span>
           </td>
-          <td class="p-2 border">{{ tx.block }}</td>
-          <td class="p-2 border">{{ tx.chaincode }}</td>
+          <td class="p-2">{{ tx.block }}</td>
+          <td class="p-2 text-green-700">{{ tx.chaincode }}</td>
+        </tr>
+        <tr v-if="filteredTransactions.length === 0">
+          <td colspan="6" class="text-center p-4 text-gray-500">No transactions found</td>
         </tr>
       </tbody>
     </table>
@@ -163,15 +171,15 @@ onMounted(() => {
     <!-- Пагинация -->
     <div class="flex justify-end gap-2 mt-4" v-if="filteredTransactions.length > itemsPerPage">
       <button
-        class="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
+        class="px-3 py-2 border border-gray-300 rounded bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-50"
         :disabled="currentPage === 1"
         @click="currentPage--"
       >
         Prev
       </button>
-      <span>Page {{ currentPage }} of {{ totalPages }}</span>
+      <span class="px-2 py-2 text-gray-700">Page {{ currentPage }} of {{ totalPages }}</span>
       <button
-        class="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
+        class="px-3 py-2 border border-gray-300 rounded bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-50"
         :disabled="currentPage === totalPages"
         @click="currentPage++"
       >
@@ -179,6 +187,7 @@ onMounted(() => {
       </button>
     </div>
 
+    <!-- Модалка -->
     <Modal v-if="showModal" @close="showModal = false">
       <div>
         <h3 class="text-lg font-bold mb-2">Transaction Details</h3>

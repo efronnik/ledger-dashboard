@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, onMounted } from "vue";
 import { useWalletStore } from "../stores/wallet";
 import EmptyState from "../components/EmptyState.vue";
 
@@ -11,7 +11,6 @@ const balance = ref<number | null>(null);
 const loadBalance = async () => {
   if (!wallet.isConnected || !wallet.account) return;
 
-  // Проверка наличия MetaMask
   if (!window.ethereum) {
     console.error("MetaMask is not installed");
     isError.value = true;
@@ -34,25 +33,36 @@ const loadBalance = async () => {
     isLoading.value = false;
   }
 };
+
+onMounted(loadBalance);
 </script>
 
 <template>
-  <div class="bg-white rounded-xl shadow p-4 mt-6 w-80">
-    <h2 class="font-semibold text-sm mb-2">Wallet Balance</h2>
+  <div class="bg-white rounded-xl shadow p-4 mt-24 w-full max-w-3xl relative">
+    <!-- Кнопка refresh -->
+    <button
+      @click="loadBalance"
+      :disabled="isLoading || !wallet.isConnected"
+      class="absolute top-2 right-2 w-8 h-8 flex items-center justify-center rounded border border-gray-300 bg-gray-100 text-gray-700 hover:bg-gray-200 hover:border-blue-500 transition-all"
+      title="Refresh"
+    >
+      🔄
+    </button>
 
-    <div v-if="isLoading" class="text-gray-500 text-xl font-semibold">Loading...</div>
+    <!-- Заголовок с иконкой доллара -->
+    <h2 class="font-semibold text-sm mb-1 flex items-center gap-1">
+      💵 Wallet Balance
+    </h2>
+    <p class="text-xs text-gray-500 mb-2">Total Portfolio Value</p>
+
+    <!-- Основной баланс -->
+    <div v-if="isLoading" class="text-gray-500 font-semibold text-xl">Loading...</div>
     <div v-else-if="isError" class="text-red-500 font-semibold text-xl">
       Network error, please try again
     </div>
     <EmptyState v-else-if="balance === null" message="No data found" />
-    <div v-else class="text-2xl font-bold text-gray-700">{{ balance }} ETH</div>
-
-    <button
-      class="mt-3 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 text-sm"
-      @click="loadBalance"
-      :disabled="isLoading || !wallet.isConnected"
-    >
-      Refresh
-    </button>
+    <div v-else class="text-2xl font-bold text-gray-700 mb-1">
+      {{ balance }} ETH
+    </div>
   </div>
 </template>

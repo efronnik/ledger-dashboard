@@ -5,15 +5,21 @@ import { useWalletStore } from "../stores/wallet";
 const wallet = useWalletStore();
 
 const handleWalletClick = async () => {
-  if (!window.ethereum) {
-    alert("MetaMask is not installed!");
-    return;
-  }
+  if (!window.ethereum) return;
 
   if (wallet.isConnected) {
     wallet.disconnectWallet();
   } else {
     await wallet.connectWallet();
+  }
+};
+
+const copyWallet = async () => {
+  if (!wallet.account) return;
+  try {
+    await navigator.clipboard.writeText(wallet.account);
+  } catch (err) {
+    console.error("Failed to copy wallet:", err);
   }
 };
 
@@ -47,6 +53,7 @@ onMounted(async () => {
         </span>
         <button
           class="p-1 rounded border border-transparent text-gray-700 bg-gray-100 hover:bg-gray-200 hover:border-blue-500 transition-all"
+          @click="copyWallet"
         >
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

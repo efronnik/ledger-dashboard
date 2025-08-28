@@ -16,7 +16,7 @@ const filterStatus = ref('');
 
 // Пагинация
 const currentPage = ref(1);
-const itemsPerPage = 6; // Показываем 6 транзакций на странице
+const itemsPerPage = 1; // Показываем 6 транзакций на странице
 
 // Модальное окно
 const showModal = ref(false);

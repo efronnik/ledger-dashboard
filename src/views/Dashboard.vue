@@ -4,6 +4,7 @@ import Tabs from "../components/Tabs.vue";
 import WalletBalance from "../components/WalletBalance.vue";
 import Assets from "../components/Assets.vue";
 import RecentTransactions from "../components/RecentTransactions.vue";
+import SendCoins from "../components/SendCoins.vue";
 </script>
 
 <template>
@@ -23,6 +24,7 @@ import RecentTransactions from "../components/RecentTransactions.vue";
       <div class="w-[30%] flex flex-col gap-6 h-full overflow-auto">
         <WalletBalance />
         <Assets />
+        <SendCoins />
       </div>
     </div>
   </div>

@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { computed } from "vue";
-import { useWalletStore } from "./stores/wallet";
-import Header from "./components/Header.vue";
-import Tabs from "./components/Tabs.vue";
-import ConnectWallet from "./components/ConnectWallet.vue";
+import { computed } from 'vue';
+import { useWalletStore } from './stores/wallet';
+import Header from './components/Header.vue';
+import Tabs from './components/Tabs.vue';
+import ConnectWallet from './components/ConnectWallet.vue';
 
 const wallet = useWalletStore();
 
@@ -17,7 +17,11 @@ const isConnected = computed(() => wallet.isConnected);
     <ConnectWallet v-if="!isConnected" key="connect" />
 
     <!-- Основной интерфейс -->
-    <div v-else key="main" class="min-h-screen bg-gray-50 font-sans text-gray-900">
+    <div
+      v-else
+      key="main"
+      class="min-h-screen bg-gray-50 font-sans text-gray-900"
+    >
       <Header />
       <Tabs />
       <div class="p-6">

@@ -1,10 +1,10 @@
-import { defineStore } from "pinia";
-import { ref } from "vue";
-import { fetchTransactions, Transaction } from "../services/rpc";
+import { defineStore } from 'pinia';
+import { ref } from 'vue';
+import { fetchTransactions, Transaction } from '../services/rpc';
 
-const STORAGE_KEY = "cachedTransactions";
+const STORAGE_KEY = 'cachedTransactions';
 
-export const useTransactionsStore = defineStore("transactions", () => {
+export const useTransactionsStore = defineStore('transactions', () => {
   const transactions = ref<Transaction[]>([]);
 
   // Загружаем транзакции из localStorage при инициализации
@@ -14,7 +14,7 @@ export const useTransactionsStore = defineStore("transactions", () => {
       try {
         transactions.value = JSON.parse(saved);
       } catch (err) {
-        console.error("Failed to parse transactions from localStorage", err);
+        console.error('Failed to parse transactions from localStorage', err);
         transactions.value = [];
       }
     }
@@ -28,7 +28,7 @@ export const useTransactionsStore = defineStore("transactions", () => {
       // Сохраняем в localStorage
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     } catch (err) {
-      console.error("Error fetching transactions", err);
+      console.error('Error fetching transactions', err);
       // Если есть сохранённые данные, оставляем их
       if (!transactions.value.length) transactions.value = [];
     }

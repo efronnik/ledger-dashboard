@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
-import { useWalletStore } from "../stores/wallet";
+import { onMounted, ref } from 'vue';
+import { useWalletStore } from '../stores/wallet';
 
 const wallet = useWalletStore();
 const isLoadingWallet = ref(false);
@@ -17,7 +17,7 @@ const handleWalletClick = async () => {
       await wallet.checkNetwork();
     }
   } catch (err) {
-    console.error("Wallet action failed", err);
+    console.error('Wallet action failed', err);
   } finally {
     isLoadingWallet.value = false;
   }
@@ -28,7 +28,7 @@ const copyWallet = async () => {
   try {
     await navigator.clipboard.writeText(wallet.account);
   } catch (err) {
-    console.error("Failed to copy wallet:", err);
+    console.error('Failed to copy wallet:', err);
   }
 };
 
@@ -40,10 +40,12 @@ onMounted(async () => {
 </script>
 
 <template>
-  <header class="flex flex-col sm:flex-row items-center justify-between px-4 sm:px-6 py-2 bg-white shadow-sm rounded-b-md fixed top-0 left-0 w-full z-50">
+  <header
+    class="flex flex-col sm:flex-row items-center justify-between px-4 sm:px-6 py-2 bg-white shadow-sm rounded-b-md fixed top-0 left-0 w-full z-50"
+  >
     <!-- Логотип и название -->
     <div class="flex items-center space-x-2 mb-2 sm:mb-0">
-      <img src="../assets/logo.jpg" alt="Logo" class="w-8 h-8"/>
+      <img src="../assets/logo.jpg" alt="Logo" class="w-8 h-8" />
       <div>
         <h1 class="font-bold text-base">Blockchain Ledger</h1>
         <p class="text-xs text-gray-500">Corporate Dashboard</p>
@@ -58,7 +60,11 @@ onMounted(async () => {
           :class="wallet.isConnected ? 'bg-green-500' : 'bg-red-500'"
         ></span>
         <span class="truncate max-w-[120px] sm:max-w-[200px]">
-          {{ wallet.isConnected ? wallet.account?.slice(0,6) + '...' + wallet.account?.slice(-4) : 'Not connected' }}
+          {{
+            wallet.isConnected
+              ? wallet.account?.slice(0, 6) + '...' + wallet.account?.slice(-4)
+              : 'Not connected'
+          }}
         </span>
         <button
           class="p-1 rounded border border-transparent text-gray-700 bg-gray-100 hover:bg-gray-200 hover:border-blue-500 transition-all"

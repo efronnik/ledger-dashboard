@@ -1,5 +1,5 @@
-import { defineConfig } from 'vite'
-import vue from '@vitejs/plugin-vue'
+import { defineConfig } from 'vite';
+import vue from '@vitejs/plugin-vue';
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -9,8 +9,8 @@ export default defineConfig({
       '/api': {
         target: 'https://api.coingecko.com/api/v3',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, '')
-      }
-    }
-  }
-})
+        rewrite: path => path.replace(/^\/api/, ''),
+      },
+    },
+  },
+});

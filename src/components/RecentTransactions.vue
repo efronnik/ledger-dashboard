@@ -26,7 +26,11 @@ const selectedTx = ref<Transaction | null>(null);
 const filteredTransactions = computed<Transaction[]>(() => {
   return transactionsStore.transactions
     .filter(tx => !filterStatus.value || tx.status === filterStatus.value)
-    .filter(tx => !search.value || tx.txID.toLowerCase().includes(search.value.toLowerCase()));
+    .filter(
+      tx =>
+        !search.value ||
+        tx.txID.toLowerCase().includes(search.value.toLowerCase()),
+    );
 });
 
 // Транзакции для текущей страницы
@@ -98,7 +102,7 @@ onMounted(() => {
           @click="openModal(tx)"
         >
           <td class="p-2 text-blue-600">
-            {{ tx.txID.slice(0,6) + '...' + tx.txID.slice(-4) }}
+            {{ tx.txID.slice(0, 6) + '...' + tx.txID.slice(-4) }}
           </td>
           <td class="p-2">{{ tx.type }}</td>
           <td class="p-2">
@@ -107,7 +111,7 @@ onMounted(() => {
               :class="{
                 'bg-green-100 text-green-800': tx.status === 'Validated',
                 'bg-yellow-100 text-yellow-800': tx.status === 'Pending',
-                'bg-red-100 text-red-800': tx.status === 'Invalid'
+                'bg-red-100 text-red-800': tx.status === 'Invalid',
               }"
             >
               {{ tx.status }}
@@ -120,7 +124,10 @@ onMounted(() => {
     </table>
 
     <!-- EmptyState если транзакций нет -->
-    <EmptyState v-if="filteredTransactions.length === 0" message="No transactions found" />
+    <EmptyState
+      v-if="filteredTransactions.length === 0"
+      message="No transactions found"
+    />
 
     <!-- Пагинация -->
     <div class="flex justify-end mt-2 space-x-2">
@@ -133,7 +140,11 @@ onMounted(() => {
       </button>
       <button
         class="px-3 py-2 border border-gray-300 rounded bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-50"
-        :disabled="currentPage === Math.ceil(filteredTransactions.length / itemsPerPage) || filteredTransactions.length === 0"
+        :disabled="
+          currentPage ===
+            Math.ceil(filteredTransactions.length / itemsPerPage) ||
+          filteredTransactions.length === 0
+        "
         @click="currentPage++"
       >
         Next
@@ -146,7 +157,10 @@ onMounted(() => {
         <h3 class="text-lg font-bold mb-2">Transaction Details</h3>
         <p><strong>TxID:</strong> {{ selectedTx?.txID }}</p>
         <p><strong>Creator:</strong> {{ selectedTx?.creator }}</p>
-        <p><strong>Endorsements:</strong> {{ selectedTx?.endorsements?.join(', ') || 'None' }}</p>
+        <p>
+          <strong>Endorsements:</strong>
+          {{ selectedTx?.endorsements?.join(', ') || 'None' }}
+        </p>
       </div>
     </Modal>
   </div>

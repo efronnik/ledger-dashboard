@@ -1,16 +1,19 @@
 <script lang="ts" setup>
-import { ref, computed, onMounted } from "vue";
-import { useWalletStore } from "../stores/wallet";
-import Modal from "../components/Modal.vue";
-import EmptyState from "../components/EmptyState.vue";
-import { fetchTransactions, Transaction as RpcTransaction } from "../services/rpc";
-import { formatDate } from "../utils/formatDate";
+import { ref, computed, onMounted } from 'vue';
+import { useWalletStore } from '../stores/wallet';
+import Modal from '../components/Modal.vue';
+import EmptyState from '../components/EmptyState.vue';
+import {
+  fetchTransactions,
+  Transaction as RpcTransaction,
+} from '../services/rpc';
+import { formatDate } from '../utils/formatDate';
 
 interface Transaction {
   txID: string;
   type: string;
   timestamp: number;
-  status: "Validated" | "Pending" | "Invalid";
+  status: 'Validated' | 'Pending' | 'Invalid';
   block: number;
   chaincode: string;
   creator: string;
@@ -23,17 +26,19 @@ const transactions = ref<Transaction[]>([]);
 const isLoading = ref(false);
 const isError = ref(false);
 
-const search = ref("");
-const filterStatus = ref("");
+const search = ref('');
+const filterStatus = ref('');
 
 const currentPage = ref(1);
 const itemsPerPage = 10;
 
 const filteredTransactions = computed(() => {
   return transactions.value
-    .filter((tx) => !filterStatus.value || tx.status === filterStatus.value)
-    .filter((tx) =>
-      !search.value || tx.txID.toLowerCase().includes(search.value.toLowerCase())
+    .filter(tx => !filterStatus.value || tx.status === filterStatus.value)
+    .filter(
+      tx =>
+        !search.value ||
+        tx.txID.toLowerCase().includes(search.value.toLowerCase()),
     );
 });
 
@@ -42,7 +47,9 @@ const paginatedTransactions = computed(() => {
   return filteredTransactions.value.slice(start, start + itemsPerPage);
 });
 
-const totalPages = computed(() => Math.ceil(filteredTransactions.value.length / itemsPerPage));
+const totalPages = computed(() =>
+  Math.ceil(filteredTransactions.value.length / itemsPerPage),
+);
 
 const showModal = ref(false);
 const selectedTx = ref<Transaction | null>(null);
@@ -62,14 +69,14 @@ const loadTransactions = async () => {
     const txs: RpcTransaction[] = await fetchTransactions(wallet.account);
 
     // Преобразуем к нашему типу Transaction
-    transactions.value = txs.map((tx) => ({
+    transactions.value = txs.map(tx => ({
       ...tx,
-      block: typeof tx.block === "string" ? parseInt(tx.block, 16) : tx.block,
+      block: typeof tx.block === 'string' ? parseInt(tx.block, 16) : tx.block,
     }));
 
     currentPage.value = 1; // сброс пагинации при обновлении
   } catch (err) {
-    console.error("Network error:", err);
+    console.error('Network error:', err);
     isError.value = true;
   } finally {
     isLoading.value = false;
@@ -138,7 +145,7 @@ onMounted(() => {
             @click="openModal(tx)"
           >
             <td class="p-2 text-blue-600">
-              {{ tx.txID.slice(0,6) + '...' + tx.txID.slice(-4) }}
+              {{ tx.txID.slice(0, 6) + '...' + tx.txID.slice(-4) }}
             </td>
             <td class="p-2">{{ tx.type }}</td>
             <td class="p-2">{{ formatDate(tx.timestamp) }}</td>
@@ -148,7 +155,7 @@ onMounted(() => {
                 :class="{
                   'bg-green-100 text-green-800': tx.status === 'Validated',
                   'bg-yellow-100 text-yellow-800': tx.status === 'Pending',
-                  'bg-red-100 text-red-800': tx.status === 'Invalid'
+                  'bg-red-100 text-red-800': tx.status === 'Invalid',
                 }"
               >
                 {{ tx.status }}
@@ -158,14 +165,19 @@ onMounted(() => {
             <td class="p-2 text-green-700">{{ tx.chaincode }}</td>
           </tr>
           <tr v-if="filteredTransactions.length === 0">
-            <td colspan="6" class="text-center p-4 text-gray-500">No transactions found</td>
+            <td colspan="6" class="text-center p-4 text-gray-500">
+              No transactions found
+            </td>
           </tr>
         </tbody>
       </table>
     </div>
 
     <!-- Пагинация -->
-    <div class="flex justify-end gap-2 mt-4" v-if="filteredTransactions.length > itemsPerPage">
+    <div
+      class="flex justify-end gap-2 mt-4"
+      v-if="filteredTransactions.length > itemsPerPage"
+    >
       <button
         class="px-3 py-2 border border-gray-300 rounded bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-50"
         :disabled="currentPage === 1"
@@ -173,7 +185,9 @@ onMounted(() => {
       >
         Prev
       </button>
-      <span class="px-2 py-2 text-gray-700">Page {{ currentPage }} of {{ totalPages }}</span>
+      <span class="px-2 py-2 text-gray-700"
+        >Page {{ currentPage }} of {{ totalPages }}</span
+      >
       <button
         class="px-3 py-2 border border-gray-300 rounded bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-50"
         :disabled="currentPage === totalPages"

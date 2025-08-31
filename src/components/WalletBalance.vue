@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from "vue";
-import { useWalletStore } from "../stores/wallet";
-import EmptyState from "./EmptyState.vue";
+import { ref, onMounted, watch } from 'vue';
+import { useWalletStore } from '../stores/wallet';
+import EmptyState from './EmptyState.vue';
 
 const wallet = useWalletStore();
 const isLoading = ref(false);
@@ -24,12 +24,14 @@ const animateBalance = (newValue: number) => {
 
   const timer = setInterval(() => {
     currentStep++;
-    displayedBalance.value = parseFloat((start + ((end - start) * currentStep) / steps).toFixed(4));
+    displayedBalance.value = parseFloat(
+      (start + ((end - start) * currentStep) / steps).toFixed(4),
+    );
     if (currentStep >= steps) clearInterval(timer);
   }, stepTime);
 };
 
-watch(balance, (newVal) => {
+watch(balance, newVal => {
   if (newVal !== null) animateBalance(newVal);
 });
 
@@ -37,7 +39,7 @@ const loadBalance = async () => {
   if (!wallet.isConnected || !wallet.account) return;
 
   if (!window.ethereum) {
-    console.error("MetaMask is not installed");
+    console.error('MetaMask is not installed');
     isError.value = true;
     return;
   }
@@ -47,12 +49,12 @@ const loadBalance = async () => {
 
   try {
     const raw = await window.ethereum.request({
-      method: "eth_getBalance",
-      params: [wallet.account, "latest"],
+      method: 'eth_getBalance',
+      params: [wallet.account, 'latest'],
     });
     balance.value = parseFloat((parseInt(raw, 16) / 1e18).toFixed(4));
   } catch (err) {
-    console.error("Failed to fetch balance", err);
+    console.error('Failed to fetch balance', err);
     isError.value = true;
   } finally {
     isLoading.value = false;
@@ -81,12 +83,17 @@ onMounted(loadBalance);
     <p class="text-xs text-gray-500 mb-2">Total Portfolio Value</p>
 
     <!-- Основной баланс -->
-    <div v-if="isLoading" class="text-gray-500 font-semibold text-xl">Loading...</div>
+    <div v-if="isLoading" class="text-gray-500 font-semibold text-xl">
+      Loading...
+    </div>
     <div v-else-if="isError" class="text-red-500 font-semibold text-xl">
       Network error, please try again
     </div>
     <EmptyState v-else-if="displayedBalance === null" message="No data found" />
-    <div v-else class="text-2xl font-bold text-gray-700 mb-1 flex items-baseline gap-1">
+    <div
+      v-else
+      class="text-2xl font-bold text-gray-700 mb-1 flex items-baseline gap-1"
+    >
       {{ displayedBalance }}
       <span class="text-xs text-gray-500">ETH</span>
     </div>

@@ -3,7 +3,6 @@ import { ref } from 'vue';
 import { ethers } from 'ethers';
 import { computed } from 'vue';
 import { useToast } from 'vue-toastification';
-import 'vue-toastification/dist/index.css';
 import { useTransactionsStore } from '../stores/transactions';
 
 const amount = ref('');
@@ -101,26 +100,28 @@ async function transactionsSend() {
       JSON.stringify(transactionsStore.transactions),
     );
   } catch (error) {
-    alert('Transaction failed!');
+    toast.error('Transaction failed!');
   }
 }
 </script>
 
 <template>
-  <div class="max-w-md mx-auto bg-gray-900 p-6 rounded-2xl shadow-lg space-y-4">
+  <div
+    class="bg-white rounded-xl shadow p-4 w-full max-w-3xl border border-gray-200"
+  >
     <!-- Заголовок -->
-    <h2 class="text-xl font-semibold text-white text-center">Send Tokens</h2>
+    <h2 class="text-xl font-semibold text-black text-center">Send Tokens</h2>
 
     <!-- Поле ввода суммы -->
-    <div>
-      <label class="block text-gray-300 text-sm mb-1">Amount</label>
+    <div class="mb-4">
+      <label class="block text-black-300 text-sm mb-1">Amount</label>
       <input
         type="text"
         v-model="amount"
         @input="validateNumber"
         @blur="validateNumber"
         placeholder="0.0000"
-        class="w-full px-4 py-2 bg-gray-800 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        class="w-full px-4 py-2 bg-white text-gray-700 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
       />
       <p v-if="amountError" class="text-red-500 text-sm mt-1">
         {{ amountError }}
@@ -128,15 +129,15 @@ async function transactionsSend() {
     </div>
 
     <!-- Поле ввода адреса -->
-    <div>
-      <label class="block text-gray-300 text-sm mb-1">Recipient Address</label>
+    <div class="mb-4">
+      <label class="block text-black-300 text-sm mb-1">Recipient Address</label>
       <input
         type="text"
         v-model="walletAddress"
         @input="validateAddress"
         @blur="validateAddress"
         placeholder="0x..."
-        class="w-full px-4 py-2 bg-gray-800 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        class="w-full px-4 py-2 bg-white text-gray-700 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
       />
       <p v-if="walletError" class="text-red-500 text-sm mt-1">
         {{ walletError }}
@@ -147,7 +148,7 @@ async function transactionsSend() {
     <button
       :disabled="!sendToken"
       @click="transactionsSend"
-      class="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition duration-200"
+      class="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition duration-200"
     >
       Send
     </button>

@@ -76,7 +76,7 @@ onMounted(async () => {
       </div>
 
       <button
-        class="px-3 py-1 bg-gray-100 rounded hover:bg-gray-200 transition-all flex items-center justify-center"
+        class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white transition-all flex items-center justify-center"
         @click="handleWalletClick"
         :disabled="isLoadingWallet"
       >
